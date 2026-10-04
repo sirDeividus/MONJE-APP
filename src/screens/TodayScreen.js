@@ -67,9 +67,11 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
   const addMinutes = (delta) => {
     const minutes = Math.max(0, day.englishMinutes + delta);
     const patch = { englishMinutes: minutes };
-    // Al alcanzar la meta se marca solo; si baja de la meta se desmarca.
-    if (minutes >= ENGLISH_GOAL_MIN) patch.english = true;
-    else if (day.englishMinutes >= ENGLISH_GOAL_MIN) patch.english = false;
+    // Solo se marca/desmarca al cruzar la meta; no pisa un cambio manual.
+    const was = day.englishMinutes >= ENGLISH_GOAL_MIN;
+    const now = minutes >= ENGLISH_GOAL_MIN;
+    if (!was && now) patch.english = true;
+    else if (was && !now) patch.english = false;
     updateDay(today, patch);
   };
 

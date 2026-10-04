@@ -19,10 +19,12 @@ export default function App() {
   const [tab, setTab] = useState('today');
   const [today, setToday] = useState(dateKey());
   const saveTimer = useRef(null);
+  const canSave = useRef(true);
 
   // Carga inicial desde AsyncStorage.
   useEffect(() => {
-    loadState().then((s) => {
+    loadState().then(({ state: s, ok }) => {
+      canSave.current = ok;
       setState(s);
       setLoaded(true);
     });
@@ -30,11 +32,17 @@ export default function App() {
 
   // Guardado con debounce (evita escribir en cada tecla de las notas).
   useEffect(() => {
-    if (!loaded) return undefined;
+    if (!loaded || !canSave.current) return undefined;
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => saveState(state), 300);
     return () => clearTimeout(saveTimer.current);
   }, [state, loaded]);
+
+  // Detecta el cambio de día con la app abierta (pasada la medianoche).
+  useEffect(() => {
+    const id = setInterval(() => setToday(dateKey()), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   // Guarda al pasar a segundo plano y refresca "hoy" al volver (cambio de día).
   useEffect(() => {
@@ -43,7 +51,7 @@ export default function App() {
       else {
         clearTimeout(saveTimer.current);
         setState((s) => {
-          saveState(s);
+          if (canSave.current) saveState(s);
           return s;
         });
       }

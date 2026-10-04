@@ -4,14 +4,18 @@ import { DEFAULT_STATE, STORAGE_KEY } from './utils';
 export async function loadState() {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_STATE;
+    if (!raw) return { state: DEFAULT_STATE, ok: true };
     const parsed = JSON.parse(raw);
     return {
-      days: parsed.days || {},
-      settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
+      state: {
+        days: parsed.days || {},
+        settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
+      },
+      ok: true,
     };
   } catch (e) {
-    return DEFAULT_STATE;
+    // ok=false: no sobrescribir los datos guardados con valores por defecto.
+    return { state: DEFAULT_STATE, ok: false };
   }
 }
 
