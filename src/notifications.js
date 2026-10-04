@@ -65,7 +65,7 @@ export async function rescheduleReminders({ settings, days, today }) {
         schedule(
           at(key, settings.morningHour),
           'Modo Monje ☀️',
-          `Empieza con 15 min de Inglés o Ciberseguridad y 15 min de lectura. ${phraseFor(key)}`
+          `Empieza con 15 min de Inglés o Ciberseguridad y ${READING_GOAL_MIN} min de lectura (puedes partirlos mañana y noche). ${phraseFor(key)}`
         )
       );
 

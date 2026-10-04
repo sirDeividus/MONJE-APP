@@ -285,7 +285,7 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
           />
         </View>
         <View className="mb-3 flex-row gap-2">
-          {[-5, 5, 10, 15].map((m) => (
+          {[-5, 5, 10, 20].map((m) => (
             <Pressable
               key={m}
               onPress={() => addReading(m)}

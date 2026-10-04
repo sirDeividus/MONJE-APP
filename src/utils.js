@@ -1,6 +1,6 @@
 export const STORAGE_KEY = '@monk_mode_v1';
-export const STUDY_GOAL_MIN = 40;
-export const READING_GOAL_MIN = 15;
+export const STUDY_GOAL_MIN = 45;
+export const READING_GOAL_MIN = 40;
 
 export const PILLARS = [
   { id: 'alcohol', icon: '🚫', title: 'Cero Alcohol', short: 'Alcohol' },
