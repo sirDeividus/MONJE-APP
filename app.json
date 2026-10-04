@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "Monk Mode Progress Tracker",
+    "slug": "monk-mode-progress-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0a0a0a",
+    "platforms": ["android"],
+    "android": {
+      "package": "com.monkmode.tracker",
+      "backgroundColor": "#0a0a0a"
+    }
+  }
+}
