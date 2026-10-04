@@ -5,8 +5,9 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import HistoryScreen from './src/screens/HistoryScreen';
 import TodayScreen from './src/screens/TodayScreen';
+import { rescheduleReminders } from './src/notifications';
 import { loadState, saveState } from './src/storage';
-import { DEFAULT_STATE, dateKey, getDay } from './src/utils';
+import { DEFAULT_STATE, dateKey, doneCount, getDay } from './src/utils';
 
 const TABS = [
   { id: 'today', label: 'Hoy', icon: '◉' },
@@ -37,6 +38,32 @@ export default function App() {
     saveTimer.current = setTimeout(() => saveState(state), 300);
     return () => clearTimeout(saveTimer.current);
   }, [state, loaded]);
+
+  // Reprograma recordatorios al cambiar lo que influye en ellos (no en cada tecla de notas).
+  const todayData = getDay(state.days, today);
+  const reminderSig = [
+    state.settings.reminders,
+    state.settings.morningHour,
+    state.settings.nightHour,
+    today,
+    doneCount(todayData),
+    todayData.englishMinutes,
+  ].join('|');
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  useEffect(() => {
+    if (!loaded) return undefined;
+    const id = setTimeout(
+      () =>
+        rescheduleReminders({
+          settings: stateRef.current.settings,
+          days: stateRef.current.days,
+          today,
+        }),
+      1000
+    );
+    return () => clearTimeout(id);
+  }, [loaded, reminderSig, today]);
 
   // Detecta el cambio de día con la app abierta (pasada la medianoche).
   useEffect(() => {

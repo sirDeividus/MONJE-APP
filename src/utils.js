@@ -1,24 +1,39 @@
 export const STORAGE_KEY = '@monk_mode_v1';
-export const ENGLISH_GOAL_MIN = 45;
+export const STUDY_GOAL_MIN = 45;
 
 export const PILLARS = [
   { id: 'alcohol', icon: '🚫', title: 'Cero Alcohol', short: 'Alcohol' },
-  { id: 'english', icon: '🇬🇧', title: 'Inglés (PC)', short: 'Inglés' },
+  { id: 'purity', icon: '🔥', title: 'Sin Porno / Sin Masturbación', short: 'Pureza' },
+  { id: 'english', icon: '🖥️', title: 'Estudio PC', short: 'Estudio' },
   { id: 'meditation', icon: '🧘', title: 'Meditación', short: 'Meditación' },
   { id: 'exercise', icon: '💪', title: 'Ejercicio', short: 'Ejercicio' },
 ];
 
-export const ENGLISH_TYPES = [
-  'Gramática',
-  'Listening',
+export const TOPICS = [
+  { id: 'english', label: 'Inglés', icon: '🇬🇧' },
+  { id: 'cyber', label: 'Ciberseguridad', icon: '🛡️' },
+  { id: 'reading', label: 'Lectura', icon: '📖' },
+];
+
+export const PRACTICE_TYPES = [
+  'Gramática en PC',
+  'Listening en PC',
   'Vocabulario',
-  'Speaking',
-  'Lectura',
+  'Labs / CTF',
+  'Teoría seguridad',
+  'Libro',
 ];
 
 export const DEFAULT_STATE = {
   days: {},
-  settings: { costPerDay: '20', hoursPerDay: '3', currency: '$' },
+  settings: {
+    costPerDay: '20',
+    hoursPerDay: '3',
+    currency: '$',
+    reminders: false,
+    morningHour: '8',
+    nightHour: '21',
+  },
 };
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -40,15 +55,26 @@ export const addDays = (key, n) => {
 
 export const emptyDay = () => ({
   alcohol: false,
+  purity: false,
   english: false,
   meditation: false,
   exercise: false,
-  englishMinutes: 0,
+  englishMinutes: 0, // minutos totales de estudio (inglés + ciber + lectura)
+  topicMinutes: { english: 0, cyber: 0, reading: 0 },
   englishTypes: [],
-  notes: { meditation: '', exercise: '' },
+  notes: { meditation: '', exercise: '', purity: '' },
 });
 
-export const getDay = (days, key) => ({ ...emptyDay(), ...(days[key] || {}) });
+export const getDay = (days, key) => {
+  const base = emptyDay();
+  const raw = days[key] || {};
+  return {
+    ...base,
+    ...raw,
+    topicMinutes: { ...base.topicMinutes, ...(raw.topicMinutes || {}) },
+    notes: { ...base.notes, ...(raw.notes || {}) },
+  };
+};
 
 export const doneCount = (day) =>
   day ? PILLARS.filter((p) => day[p.id]).length : 0;

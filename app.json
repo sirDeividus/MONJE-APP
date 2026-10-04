@@ -7,6 +7,7 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0a0a0a",
     "platforms": ["android"],
+    "plugins": ["expo-notifications"],
     "android": {
       "package": "com.monkmode.tracker",
       "backgroundColor": "#0a0a0a"

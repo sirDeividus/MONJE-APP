@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 import PillarCard from '../components/PillarCard';
 import ProgressRing from '../components/ProgressRing';
 import {
-  ENGLISH_GOAL_MIN,
-  ENGLISH_TYPES,
+  STUDY_GOAL_MIN,
+  PRACTICE_TYPES,
+  TOPICS,
   PILLARS,
+  bestStreak,
   countStreak,
   doneCount,
   fmt,
@@ -14,6 +16,8 @@ import {
   longDate,
   num,
 } from '../utils';
+import { phraseFor } from '../phrases';
+import { ensurePermission } from '../notifications';
 
 function Chip({ label, active, onPress }) {
   return (
@@ -52,6 +56,7 @@ function NoteInput({ value, onChangeText, placeholder }) {
 
 export default function TodayScreen({ state, today, updateDay, updateSettings }) {
   const [showSettings, setShowSettings] = useState(false);
+  const [topic, setTopic] = useState('english');
   const { days, settings } = state;
   const day = getDay(days, today);
   const done = doneCount(day);
@@ -61,18 +66,32 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
   // Alcohol: días sobrio consecutivos y acumulados.
   const soberStreak = countStreak(days, today, (d) => d && d.alcohol);
   const soberTotal = Object.values(days).filter((d) => d && d.alcohol).length;
+  const cleanStreak = countStreak(days, today, (d) => d && d.purity);
+  const cleanBest = bestStreak(days, (d) => d && d.purity);
   const money = soberTotal * num(settings.costPerDay);
   const hours = soberTotal * num(settings.hoursPerDay);
 
   const addMinutes = (delta) => {
-    const minutes = Math.max(0, day.englishMinutes + delta);
-    const patch = { englishMinutes: minutes };
+    // El cambio real nunca baja el tema de 0 (el total se mantiene coherente).
+    const current = day.topicMinutes[topic] || 0;
+    const applied = Math.max(-current, delta);
+    if (applied === 0) return;
+    const minutes = Math.max(0, day.englishMinutes + applied);
+    const patch = {
+      englishMinutes: minutes,
+      topicMinutes: { ...day.topicMinutes, [topic]: current + applied },
+    };
     // Solo se marca/desmarca al cruzar la meta; no pisa un cambio manual.
-    const was = day.englishMinutes >= ENGLISH_GOAL_MIN;
-    const now = minutes >= ENGLISH_GOAL_MIN;
+    const was = day.englishMinutes >= STUDY_GOAL_MIN;
+    const now = minutes >= STUDY_GOAL_MIN;
     if (!was && now) patch.english = true;
     else if (was && !now) patch.english = false;
     updateDay(today, patch);
+  };
+
+  const toggleReminders = async (on) => {
+    if (on && !(await ensurePermission())) return;
+    updateSettings({ reminders: on });
   };
 
   const toggleType = (t) => {
@@ -83,7 +102,7 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
   };
 
   const setNote = (id, text) => updateDay(today, { notes: { ...day.notes, [id]: text } });
-  const englishPct = Math.min(100, (day.englishMinutes / ENGLISH_GOAL_MIN) * 100);
+  const englishPct = Math.min(100, (day.englishMinutes / STUDY_GOAL_MIN) * 100);
 
   return (
     <ScrollView
@@ -92,6 +111,10 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
     >
       <Text className="text-xs uppercase tracking-widest text-neon">Monk Mode</Text>
       <Text className="mb-4 text-2xl font-bold capitalize text-white">{longDate(today)}</Text>
+
+      <View className="mb-4 rounded-2xl border border-neon/30 bg-neon/5 p-4">
+        <Text className="text-sm italic text-white">“{phraseFor(today)}”</Text>
+      </View>
 
       <View className="mb-4 flex-row items-center rounded-2xl border border-line bg-card p-4">
         <ProgressRing percent={percent} size={140} label={`${done}/${PILLARS.length} pilares`} />
@@ -149,16 +172,56 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
       </PillarCard>
 
       <PillarCard
-        icon="🇬🇧"
-        title="Acelerar Inglés"
-        subtitle={`Mínimo ${ENGLISH_GOAL_MIN} min desde PC/pantalla`}
+        icon="🔥"
+        title="Sin Porno / Sin Masturbación"
+        subtitle="Cero hoy. Controla tu energía y tu enfoque"
+        done={day.purity}
+        onToggle={() => updateDay(today, { purity: !day.purity })}
+      >
+        <View className="mb-3 flex-row gap-2">
+          <Stat label="Días limpio (racha)" value={cleanStreak} accent="text-neon" />
+          <Stat label="Mejor racha" value={cleanBest} accent="text-cyan" />
+        </View>
+        <NoteInput
+          value={day.notes.purity}
+          onChangeText={(t) => setNote('purity', t)}
+          placeholder="¿Qué disparó el impulso? ¿Cómo lo manejaste?"
+        />
+        <Text className="mt-2 text-[11px] text-muted">
+          Si llega el impulso: regla de 10 minutos. Levántate, sal del cuarto, agua fría o flexiones.
+        </Text>
+      </PillarCard>
+
+      <PillarCard
+        icon="🖥️"
+        title="Estudio: Inglés + Ciberseguridad + Lectura"
+        subtitle={`Meta ${STUDY_GOAL_MIN} min: 15 en la mañana, el resto en la noche`}
         done={day.english}
         onToggle={() => updateDay(today, { english: !day.english })}
       >
+        <View className="mb-3 flex-row gap-2">
+          {TOPICS.map((t) => (
+            <Pressable
+              key={t.id}
+              onPress={() => setTopic(t.id)}
+              className={`flex-1 items-center rounded-lg border py-2 ${
+                topic === t.id ? 'border-cyan bg-cyan/15' : 'border-line bg-elevated'
+              }`}
+            >
+              <Text className="text-base">{t.icon}</Text>
+              <Text className={`text-[11px] ${topic === t.id ? 'text-cyan' : 'text-muted'}`}>
+                {t.label}
+              </Text>
+              <Text className="text-xs font-semibold text-white">
+                {day.topicMinutes[t.id] || 0} min
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         <View className="mb-2 flex-row items-end justify-between">
           <Text className="text-3xl font-bold text-white">
             {day.englishMinutes}
-            <Text className="text-base font-normal text-muted"> / {ENGLISH_GOAL_MIN} min</Text>
+            <Text className="text-base font-normal text-muted"> / {STUDY_GOAL_MIN} min</Text>
           </Text>
         </View>
         <View className="mb-3 h-2 overflow-hidden rounded-full bg-line">
@@ -181,10 +244,10 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
           ))}
         </View>
         <View className="flex-row flex-wrap">
-          {ENGLISH_TYPES.map((t) => (
+          {PRACTICE_TYPES.map((t) => (
             <Chip
               key={t}
-              label={`${t} en PC`}
+              label={t}
               active={day.englishTypes.includes(t)}
               onPress={() => toggleType(t)}
             />
@@ -219,6 +282,45 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
           placeholder="Observaciones (ej. Glúteos/Pecho)"
         />
       </PillarCard>
+
+      <View className="rounded-2xl border border-line bg-card p-4">
+        <View className="flex-row items-center">
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-white">🔔 Recordatorios</Text>
+            <Text className="mt-0.5 text-xs text-muted">
+              Mañana: arranca con 15 min. Noche: te dice lo que falta.
+            </Text>
+          </View>
+          <Switch
+            value={!!settings.reminders}
+            onValueChange={toggleReminders}
+            trackColor={{ false: '#262626', true: '#22d3ee66' }}
+            thumbColor={settings.reminders ? '#22d3ee' : '#737373'}
+          />
+        </View>
+        {settings.reminders ? (
+          <View className="mt-3 flex-row gap-2">
+            <View className="flex-1">
+              <Text className="mb-1 text-[11px] text-muted">Hora mañana (0-23)</Text>
+              <TextInput
+                value={settings.morningHour}
+                onChangeText={(v) => updateSettings({ morningHour: v.replace(/\D/g, '').slice(0, 2) })}
+                keyboardType="number-pad"
+                className="rounded-lg border border-line bg-elevated px-3 py-2 text-white"
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="mb-1 text-[11px] text-muted">Hora noche (0-23)</Text>
+              <TextInput
+                value={settings.nightHour}
+                onChangeText={(v) => updateSettings({ nightHour: v.replace(/\D/g, '').slice(0, 2) })}
+                keyboardType="number-pad"
+                className="rounded-lg border border-line bg-elevated px-3 py-2 text-white"
+              />
+            </View>
+          </View>
+        ) : null}
+      </View>
     </ScrollView>
   );
 }
