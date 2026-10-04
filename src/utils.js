@@ -1,10 +1,12 @@
 export const STORAGE_KEY = '@monk_mode_v1';
 export const STUDY_GOAL_MIN = 45;
+export const READING_GOAL_MIN = 15;
 
 export const PILLARS = [
   { id: 'alcohol', icon: '🚫', title: 'Cero Alcohol', short: 'Alcohol' },
   { id: 'purity', icon: '🔥', title: 'Sin Porno / Sin Masturbación', short: 'Pureza' },
   { id: 'english', icon: '🖥️', title: 'Estudio PC', short: 'Estudio' },
+  { id: 'reading', icon: '📖', title: 'Lectura', short: 'Lectura' },
   { id: 'meditation', icon: '🧘', title: 'Meditación', short: 'Meditación' },
   { id: 'exercise', icon: '💪', title: 'Ejercicio', short: 'Ejercicio' },
 ];
@@ -12,7 +14,6 @@ export const PILLARS = [
 export const TOPICS = [
   { id: 'english', label: 'Inglés', icon: '🇬🇧' },
   { id: 'cyber', label: 'Ciberseguridad', icon: '🛡️' },
-  { id: 'reading', label: 'Lectura', icon: '📖' },
 ];
 
 export const PRACTICE_TYPES = [
@@ -21,7 +22,6 @@ export const PRACTICE_TYPES = [
   'Vocabulario',
   'Labs / CTF',
   'Teoría seguridad',
-  'Libro',
 ];
 
 export const DEFAULT_STATE = {
@@ -56,13 +56,15 @@ export const addDays = (key, n) => {
 export const emptyDay = () => ({
   alcohol: false,
   purity: false,
+  reading: false,
+  readingMinutes: 0,
   english: false,
   meditation: false,
   exercise: false,
-  englishMinutes: 0, // minutos totales de estudio (inglés + ciber + lectura)
-  topicMinutes: { english: 0, cyber: 0, reading: 0 },
+  englishMinutes: 0, // minutos totales de estudio (inglés + ciberseguridad)
+  topicMinutes: { english: 0, cyber: 0 },
   englishTypes: [],
-  notes: { meditation: '', exercise: '', purity: '' },
+  notes: { meditation: '', exercise: '', purity: '', reading: '' },
 });
 
 export const getDay = (days, key) => {

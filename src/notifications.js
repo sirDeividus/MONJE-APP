@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { phraseFor } from './phrases';
-import { PILLARS, STUDY_GOAL_MIN, addDays, doneCount, getDay, num, parseKey } from './utils';
+import { PILLARS, READING_GOAL_MIN, STUDY_GOAL_MIN, addDays, doneCount, getDay, num, parseKey } from './utils';
 
 const CHANNEL = 'monk-mode';
 
@@ -65,7 +65,7 @@ export async function rescheduleReminders({ settings, days, today }) {
         schedule(
           at(key, settings.morningHour),
           'Modo Monje ☀️',
-          `Empieza con 15 min de estudio (Inglés, Ciberseguridad o Lectura). ${phraseFor(key)}`
+          `Empieza con 15 min de Inglés o Ciberseguridad y 15 min de lectura. ${phraseFor(key)}`
         )
       );
 
@@ -73,10 +73,12 @@ export async function rescheduleReminders({ settings, days, today }) {
       let body;
       if (i === 0) {
         const left = Math.max(0, STUDY_GOAL_MIN - day.englishMinutes);
+        const readLeft = Math.max(0, READING_GOAL_MIN - (day.readingMinutes || 0));
         const pending = PILLARS.length - doneCount(day);
         body =
           `Te faltan ${pending} pilar${pending === 1 ? '' : 'es'}` +
-          (left > 0 ? ` y ${left} min de estudio` : '') +
+          (left > 0 ? `, ${left} min de estudio` : '') +
+          (readLeft > 0 ? ` y ${readLeft} min de lectura` : '') +
           `. ${phraseFor(key, 7)}`;
       } else {
         body = `Cierra el día: completa tus pilares y protege tu racha. ${phraseFor(key, 7)}`;

@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-nati
 import PillarCard from '../components/PillarCard';
 import ProgressRing from '../components/ProgressRing';
 import {
+  READING_GOAL_MIN,
   STUDY_GOAL_MIN,
   PRACTICE_TYPES,
   TOPICS,
@@ -89,6 +90,16 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
     updateDay(today, patch);
   };
 
+  const addReading = (delta) => {
+    const was = day.readingMinutes || 0;
+    const minutes = Math.max(0, was + delta);
+    if (minutes === was) return;
+    const patch = { readingMinutes: minutes };
+    if (was < READING_GOAL_MIN && minutes >= READING_GOAL_MIN) patch.reading = true;
+    else if (was >= READING_GOAL_MIN && minutes < READING_GOAL_MIN) patch.reading = false;
+    updateDay(today, patch);
+  };
+
   const toggleReminders = async (on) => {
     if (on && !(await ensurePermission())) return;
     updateSettings({ reminders: on });
@@ -102,6 +113,7 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
   };
 
   const setNote = (id, text) => updateDay(today, { notes: { ...day.notes, [id]: text } });
+  const readingPct = Math.min(100, ((day.readingMinutes || 0) / READING_GOAL_MIN) * 100);
   const englishPct = Math.min(100, (day.englishMinutes / STUDY_GOAL_MIN) * 100);
 
   return (
@@ -194,7 +206,7 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
 
       <PillarCard
         icon="🖥️"
-        title="Estudio: Inglés + Ciberseguridad + Lectura"
+        title="Estudio: Inglés + Ciberseguridad"
         subtitle={`Meta ${STUDY_GOAL_MIN} min: 15 en la mañana, el resto en la noche`}
         done={day.english}
         onToggle={() => updateDay(today, { english: !day.english })}
@@ -253,6 +265,43 @@ export default function TodayScreen({ state, today, updateDay, updateSettings })
             />
           ))}
         </View>
+      </PillarCard>
+
+      <PillarCard
+        icon="📖"
+        title="Lectura"
+        subtitle={`Meta ${READING_GOAL_MIN} min: puedes partirlos mañana y noche`}
+        done={day.reading}
+        onToggle={() => updateDay(today, { reading: !day.reading })}
+      >
+        <Text className="mb-2 text-3xl font-bold text-white">
+          {day.readingMinutes || 0}
+          <Text className="text-base font-normal text-muted"> / {READING_GOAL_MIN} min</Text>
+        </Text>
+        <View className="mb-3 h-2 overflow-hidden rounded-full bg-line">
+          <View
+            style={{ width: `${readingPct}%` }}
+            className={`h-2 rounded-full ${readingPct >= 100 ? 'bg-neon' : 'bg-cyan'}`}
+          />
+        </View>
+        <View className="mb-3 flex-row gap-2">
+          {[-5, 5, 10, 15].map((m) => (
+            <Pressable
+              key={m}
+              onPress={() => addReading(m)}
+              className="flex-1 items-center rounded-lg border border-line bg-elevated py-2"
+            >
+              <Text className={m > 0 ? 'font-medium text-cyan' : 'text-muted'}>
+                {m > 0 ? `+${m}` : m}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <NoteInput
+          value={day.notes.reading}
+          onChangeText={(t) => setNote('reading', t)}
+          placeholder="Libro / páginas (ej. Atomic Habits, p. 40-55)"
+        />
       </PillarCard>
 
       <PillarCard

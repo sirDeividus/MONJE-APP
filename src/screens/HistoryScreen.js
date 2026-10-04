@@ -156,6 +156,7 @@ export default function HistoryScreen({ state, today, updateDay }) {
         <Text className="mb-3 text-xs text-muted">
           {doneCount(sel)}/{PILLARS.length} pilares
           {sel.englishMinutes ? ` · ${sel.englishMinutes} min de estudio` : ''}
+          {sel.readingMinutes ? ` · ${sel.readingMinutes} min de lectura` : ''}
           {selected < today ? ' · toca para corregir' : ''}
         </Text>
         {PILLARS.map((p) => (

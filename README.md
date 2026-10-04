@@ -1,6 +1,6 @@
 # Monk Mode Progress Tracker
 
-App Android (Expo + React Native + NativeWind) con 5 pilares diarios: Cero Alcohol, Sin Porno/Sin Masturbación, Estudio en PC (Inglés + Ciberseguridad + Lectura, 45 min), Meditación y Ejercicio, con recordatorios y frases motivacionales. Datos 100% locales (AsyncStorage). Dark mode por defecto.
+App Android (Expo + React Native + NativeWind) con 6 pilares diarios: Cero Alcohol, Sin Porno/Sin Masturbación, Estudio en PC (Inglés + Ciberseguridad, 45 min), Lectura (15 min), Meditación y Ejercicio, con recordatorios y frases motivacionales. Datos 100% locales (AsyncStorage). Dark mode por defecto.
 
 ## Ejecutar en Android Studio
 
